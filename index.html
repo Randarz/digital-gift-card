@@ -14,10 +14,10 @@
             align-items: center;
             min-height: 100vh;
             background-color: #f0f2f5;
-            overflow: hidden; /* Prevent scroll during animation */
             margin: 0;
             padding: 20px; /* Add some padding for smaller screens */
             box-sizing: border-box;
+            color: #333;
         }
 
         .gift-card-container {
@@ -25,15 +25,12 @@
             width: 90%; /* Responsive width */
             max-width: 400px; /* Max width for larger screens */
             height: 550px; /* Fixed height for the card */
-            perspective: 1000px; /* For 3D flip effect */
         }
 
         .gift-card {
             width: 100%;
             height: 100%;
             position: absolute;
-            transform-style: preserve-3d;
-            transition: transform 1s cubic-bezier(0.25, 0.1, 0.25, 1); /* Smooth transition */
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             background-color: #ffffff;
@@ -42,149 +39,364 @@
             justify-content: center;
             align-items: center;
             overflow: hidden; /* Hide overflow from rounded corners */
+            transition: background-color 0.5s ease; /* Smooth transition for background change */
         }
 
-        .gift-card.open {
-            transform: rotateY(180deg);
-        }
-
-        .gift-card-front,
-        .gift-card-back {
-            position: absolute;
+        /* Styles for the initial "Tap to Open" front */
+        .gift-card-front-content {
+            background: linear-gradient(135deg, #FFD700, #FF8C00); /* Gold to Dark Orange */
+            color: #fff;
             width: 100%;
             height: 100%;
-            backface-visibility: hidden; /* Hide back during front view */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             border-radius: 20px;
-            box-sizing: border-box;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .gift-card-front {
-            background: linear-gradient(135deg, #FFD700, #FF8C00); /* Gold to Dark Orange */
-            color: #fff;
-            z-index: 2;
             cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.5s ease;
+            transition: opacity 0.5s ease; /* Smooth fade out */
+            position: absolute; /* To allow it to overlay the back content */
+            top: 0;
+            left: 0;
+            z-index: 2; /* Ensure it's on top initially */
         }
 
-        .gift-card-front:active {
-            transform: scale(0.98); /* Slight press effect on tap */
+        .gift-card-front-content.hidden {
+            opacity: 0;
+            pointer-events: none; /* Disable clicks when hidden */
         }
 
-        .gift-card-front h1 {
+        .gift-card-front-content h1 {
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 1rem;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        .gift-card-front p {
+        .gift-card-front-content p {
             font-size: 1.2rem;
             font-weight: 400;
         }
 
-        .gift-card-back {
-            background-color: #fdfdfd;
+        /* Styles for the message content that appears */
+        .gift-card-message-display {
+            /* Background will be set by JavaScript */
             color: #333;
-            transform: rotateY(180deg); /* Initially rotated to be hidden */
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; /* Align content to top */
-            padding-top: 40px; /* More padding at the top */
+            justify-content: space-between; /* Distributes space between items (pushes content to top, button to bottom) */
+            align-items: center; /* Centered horizontally */
+            padding: 40px 20px; /* Padding for top and bottom */
+            box-sizing: border-box;
+            opacity: 0; /* Initially hidden */
+            transition: opacity 0.5s ease; /* Smooth fade in */
+            position: absolute; /* To allow it to be behind the front content */
+            top: 0;
+            left: 0;
+            z-index: 1; /* Behind the front content initially */
         }
 
-        .gift-card-back h2 {
-            font-size: 2rem;
+        .gift-card-message-display.active {
+            opacity: 1;
+            z-index: 3; /* Bring to front when active */
+        }
+
+        .gift-card-message-display .message-content {
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: #555;
+            max-width: 700px;
+            text-align: justify; /* Changed to justify the message text */
+            /* Removed margin-bottom and padding from here, now controlled by parent flexbox */
+            overflow-y: auto; /* Enable scrolling for long messages */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            flex-grow: 1; /* Allows message content to take up available space */
+            padding: 0 15px; /* Horizontal padding for text */
+        }
+
+        .gift-card-message-display .close-button {
+            background-color: #2c3e50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
             font-weight: 700;
-            margin-bottom: 1.5rem;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 20px; /* Space from message content above */
+            margin-bottom: 20px; /* Added margin from the bottom of the card */
+        }
+
+        .gift-card-message-display .close-button:hover {
+            background-color: #34495e;
+            transform: translateY(-1px);
+        }
+
+
+        /* Password Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .modal-content h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
             color: #FF8C00;
         }
 
-        .gift-card-back .message-content {
+        .modal-content input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             font-size: 1.1rem;
-            line-height: 1.6;
-            color: #555;
-            max-height: 80%; /* Limit message height */
-            overflow-y: auto; /* Enable scrolling for long messages */
-            padding: 0 15px; /* Padding for scrollable content */
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .modal-content input[type="password"]:focus {
+            border-color: #FF8C00;
+        }
+
+        .modal-content button {
+            background-color: #FF8C00;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .modal-content button:hover {
+            background-color: #e07b00;
+            transform: translateY(-1px);
+        }
+
+        .modal-content .error-message {
+            color: #e74c3c;
+            margin-top: 10px;
+            font-size: 0.95rem;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-content .error-message.active {
+            visibility: visible;
+            opacity: 1;
         }
 
         /* Responsive adjustments */
-        @media (max-width: 480px) {
-            .gift-card-front h1 {
+        @media (max-width: 768px) {
+            .gift-card-front-content h1 {
                 font-size: 2rem;
             }
-            .gift-card-front p {
+            .gift-card-front-content p {
                 font-size: 1rem;
             }
-            .gift-card-back h2 {
-                font-size: 1.75rem;
-            }
-            .gift-card-back .message-content {
+            .gift-card-message-display .message-content {
                 font-size: 1rem;
+                padding: 0 10px;
+            }
+            .gift-card-message-display .close-button {
+                font-size: 1rem;
+                padding: 10px 25px;
+            }
+            .modal-content h3 {
+                font-size: 1.5rem;
+            }
+            .modal-content input[type="password"],
+            .modal-content button {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+            .gift-card-front-content h1 {
+                font-size: 1.8rem;
+            }
+            .gift-card-front-content p {
+                font-size: 0.9rem;
             }
             .gift-card-container {
                 height: 500px; /* Slightly smaller height for very small screens */
+            }
+            .gift-card-message-display .message-content {
+                font-size: 0.95rem;
+            }
+            .modal-content {
+                padding: 20px;
+            }
+            .modal-content h3 {
+                font-size: 1.3rem;
             }
         }
     </style>
 </head>
 <body>
     <div class="gift-card-container">
-        <div id="giftCard" class="gift-card">
-            <div class="gift-card-front">
+        <div id="mainGiftCard" class="gift-card">
+            <div id="giftCardFrontContent" class="gift-card-front-content">
                 <h1>Tap to Open!</h1>
                 <p>A special message awaits you...</p>
             </div>
-            <div class="gift-card-back">
-                <h2>Happy Birthday, [Recipient's Name]!</h2>
-                <div class="message-content">
-                    <p>Dearest [Recipient's Name],</p>
-                    <p>Wishing you the happiest of birthdays filled with joy, laughter, and everything wonderful! You mean so much to me/us, and I'm/we're incredibly grateful for your presence in my/our life/lives.</p>
-                    <p>May this year bring you new adventures, exciting opportunities, and countless moments of happiness. Remember to always chase your dreams and never stop shining!</p>
-                    <p>With all my/our love,</p>
-                    <p>[Your Name/Names]</p>
-                    <p class="mt-4 text-sm text-gray-600">P.S. This isn't just a message; it's a virtual hug and a reminder of how much you're cherished!</p>
-                </div>
+            <div id="giftCardMessageDisplay" class="gift-card-message-display">
+                <div id="cardMessageContent" class="message-content"></div>
+                <button id="closeCardButton" class="close-button">Close Message</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="passwordModalOverlay" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Enter Your Secret Code</h3>
+            <input type="password" id="passwordInput" placeholder="Enter password">
+            <button id="submitPassword">Unlock Message</button>
+            <p id="errorMessage" class="error-message">Incorrect password. Please try again.</p>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const giftCard = document.getElementById('giftCard');
+            // Data for each personalized message, now with fixed passwords and unique backgrounds.
+            // IMPORTANT: For actual security, passwords should NOT be stored in client-side JavaScript.
+            // This is for a fun, interactive reveal, not for sensitive data.
+            const recipientData = [
+                { name: "Prabu", message: "Dearest Prabu, wishing you a day as amazing as you are! May your path be filled with joy, success, and endless smiles. Happy special occasion!", password: "prabu123", backgroundColor: "#ffe0b2" }, // Light Orange
+                { name: "Sharfina", message: "To Sharfina, may your special day be sprinkled with happiness and surrounded by loved ones. You truly shine! Best wishes always.", password: "sharfina456", backgroundColor: "#c8e6c9" }, // Light Green
+                { name: "Laila", message: "Laila, may your heart be light and your days be bright. Celebrating you today and always! Sending you so much love and good vibes.", password: "laila789", backgroundColor: "#bbdefb" }, // Light Blue
+                { name: "Fingkan", message: "For Fingkan, may this message bring a smile to your face and warmth to your heart. You're simply wonderful! Enjoy every moment.", password: "fingkan101", backgroundColor: "#f8bbd0" }, // Light Pink
+                { name: "Fadlurrohman", message: "Fadlurrohman, here's to new beginnings and cherished memories. May your journey be filled with peace, prosperity, and joy. All the best!", password: "fadlur202", backgroundColor: "#d7ccc8" }, // Light Brown
+                { name: "Nasywa", message: "Sweet Nasywa, may your dreams take flight and your spirit soar. Wishing you all the happiness in the world. You deserve it!", password: "nasywa303", backgroundColor: "#fff9c4" }, // Light Yellow
+                { name: "Reni", message: "Reni, your kindness and strength inspire us all. May your special day be as lovely and vibrant as you are. Cheers to you!", password: "reni404", backgroundColor: "#e1bee7" }, // Light Purple
+                { name: "Amel", message: "To Amel, may your laughter be infectious and your days be filled with beautiful moments. So glad to have you in our lives. Happy everything!", password: "amel505", backgroundColor: "#b2ebf2" }, // Light Cyan
+                { name: "Alfito", message: "Alfito, may your future be bright and your endeavors be successful. Keep reaching for the stars! Sending you positive energy.", password: "alfito606", backgroundColor: "#f0f4c3" }, // Light Lime
+                { name: "Pniel", message: "Pniel, may your day be blessed with peace, joy, and all the good things life has to offer. You are truly special. Warmest wishes!", password: "pniel707", backgroundColor: "#ffccbc" }, // Light Red-Orange
+                { name: "Siti", message: "Siti, your warmth brightens every room. May your special occasion be filled with love, happiness, and unforgettable moments. Thinking of you!", password: "siti808", backgroundColor: "#d1c4e9" }, // Light Indigo
+                { name: "Shofi", message: "For Shofi, may your journey be filled with exciting discoveries and wonderful experiences. Keep shining your light! With much affection.", password: "shofi909", backgroundColor: "#b2dfdb" }, // Light Teal
+                { name: "Novri", message: "Novri, here's to celebrating you and all the wonderful things you bring to the world. May your day be fantastic and your year even better! Lots of love.", password: "novri111", backgroundColor: "#cfd8dc" }  // Light Blue-Grey
+            ];
 
-            // Function to handle opening the card
-            const openGiftCard = () => {
-                giftCard.classList.add('open');
-                // Optional: Play a sound effect when opened
-                // const audio = new Audio('path/to/your/sound.mp3');
-                // audio.play();
-            };
+            const messagesByPassword = {}; // This object will store password -> {name, message, backgroundColor}
 
-            // Add event listener for tap/click
-            giftCard.addEventListener('click', openGiftCard);
+            // Populate the messagesByPassword object using the fixed passwords and backgrounds
+            recipientData.forEach(data => {
+                messagesByPassword[data.password] = { name: data.name, message: data.message, backgroundColor: data.backgroundColor };
+            });
 
-            // For accessibility, allow opening with Enter key if focused
-            giftCard.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter' || event.keyCode === 13) {
-                    openGiftCard();
+            const mainGiftCard = document.getElementById('mainGiftCard');
+            const giftCardFrontContent = document.getElementById('giftCardFrontContent');
+            const giftCardMessageDisplay = document.getElementById('giftCardMessageDisplay');
+            const passwordModalOverlay = document.getElementById('passwordModalOverlay');
+            const passwordInput = document.getElementById('passwordInput');
+            const submitPasswordBtn = document.getElementById('submitPassword');
+            const errorMessage = document.getElementById('errorMessage');
+
+            // Elements for the message display
+            const cardMessageContent = document.getElementById('cardMessageContent');
+            const closeCardButton = document.getElementById('closeCardButton');
+
+            // Event listener for clicking the main gift card (front content)
+            giftCardFrontContent.addEventListener('click', () => {
+                // Only show modal if the message is not already displayed
+                if (!giftCardMessageDisplay.classList.contains('active')) {
+                    passwordInput.value = ''; // Clear previous input
+                    errorMessage.classList.remove('active'); // Hide error message
+                    passwordModalOverlay.classList.add('active');
+                    passwordInput.focus(); // Focus input for immediate typing
                 }
             });
 
-            // Set initial focus for accessibility
-            giftCard.tabIndex = 0;
+            // Handle password submission
+            submitPasswordBtn.addEventListener('click', () => {
+                const enteredPassword = passwordInput.value.trim();
+                const cardContent = messagesByPassword[enteredPassword]; // Look up message by password
+
+                if (cardContent) {
+                    passwordModalOverlay.classList.remove('active'); // Close password modal
+
+                    // Populate the message display
+                    cardMessageContent.innerHTML = cardContent.message.replace(/\n/g, '<br>');
+
+                    // Set the specific background color for the message display
+                    giftCardMessageDisplay.style.background = cardContent.backgroundColor;
+                    // Also update the main card's background to match for a seamless transition
+                    mainGiftCard.style.backgroundColor = cardContent.backgroundColor;
+
+                    // Hide the front content and show the message display
+                    giftCardFrontContent.classList.add('hidden');
+                    giftCardMessageDisplay.classList.add('active');
+                } else {
+                    errorMessage.classList.add('active'); // Show error message
+                }
+            });
+
+            // Allow pressing Enter in password input to submit
+            passwordInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.keyCode === 13) {
+                    submitPasswordBtn.click();
+                }
+            });
+
+            // Close message display (return to "Tap to Open" state)
+            closeCardButton.addEventListener('click', () => {
+                giftCardMessageDisplay.classList.remove('active');
+                giftCardFrontContent.classList.remove('hidden');
+                // Reset backgrounds to initial state
+                giftCardMessageDisplay.style.background = ''; // Clear specific background
+                mainGiftCard.style.backgroundColor = ''; // Reset main card background
+            });
+
+            // Set initial focus for accessibility on the main card
+            mainGiftCard.tabIndex = 0;
         });
     </script>
 </body>
 </html>
-
