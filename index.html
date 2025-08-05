@@ -1,1 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Special Message For You!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            overflow: hidden; /* Prevent scroll during animation */
+            margin: 0;
+            padding: 20px; /* Add some padding for smaller screens */
+            box-sizing: border-box;
+        }
+
+        .gift-card-container {
+            position: relative;
+            width: 90%; /* Responsive width */
+            max-width: 400px; /* Max width for larger screens */
+            height: 550px; /* Fixed height for the card */
+            perspective: 1000px; /* For 3D flip effect */
+        }
+
+        .gift-card {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform-style: preserve-3d;
+            transition: transform 1s cubic-bezier(0.25, 0.1, 0.25, 1); /* Smooth transition */
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Hide overflow from rounded corners */
+        }
+
+        .gift-card.open {
+            transform: rotateY(180deg);
+        }
+
+        .gift-card-front,
+        .gift-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* Hide back during front view */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 20px;
+            box-sizing: border-box;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .gift-card-front {
+            background: linear-gradient(135deg, #FFD700, #FF8C00); /* Gold to Dark Orange */
+            color: #fff;
+            z-index: 2;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.5s ease;
+        }
+
+        .gift-card-front:active {
+            transform: scale(0.98); /* Slight press effect on tap */
+        }
+
+        .gift-card-front h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .gift-card-front p {
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+
+        .gift-card-back {
+            background-color: #fdfdfd;
+            color: #333;
+            transform: rotateY(180deg); /* Initially rotated to be hidden */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Align content to top */
+            padding-top: 40px; /* More padding at the top */
+        }
+
+        .gift-card-back h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #FF8C00;
+        }
+
+        .gift-card-back .message-content {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #555;
+            max-height: 80%; /* Limit message height */
+            overflow-y: auto; /* Enable scrolling for long messages */
+            padding: 0 15px; /* Padding for scrollable content */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .gift-card-front h1 {
+                font-size: 2rem;
+            }
+            .gift-card-front p {
+                font-size: 1rem;
+            }
+            .gift-card-back h2 {
+                font-size: 1.75rem;
+            }
+            .gift-card-back .message-content {
+                font-size: 1rem;
+            }
+            .gift-card-container {
+                height: 500px; /* Slightly smaller height for very small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="gift-card-container">
+        <div id="giftCard" class="gift-card">
+            <div class="gift-card-front">
+                <h1>Tap to Open!</h1>
+                <p>A special message awaits you...</p>
+            </div>
+            <div class="gift-card-back">
+                <h2>Happy Birthday, [Recipient's Name]!</h2>
+                <div class="message-content">
+                    <p>Dearest [Recipient's Name],</p>
+                    <p>Wishing you the happiest of birthdays filled with joy, laughter, and everything wonderful! You mean so much to me/us, and I'm/we're incredibly grateful for your presence in my/our life/lives.</p>
+                    <p>May this year bring you new adventures, exciting opportunities, and countless moments of happiness. Remember to always chase your dreams and never stop shining!</p>
+                    <p>With all my/our love,</p>
+                    <p>[Your Name/Names]</p>
+                    <p class="mt-4 text-sm text-gray-600">P.S. This isn't just a message; it's a virtual hug and a reminder of how much you're cherished!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const giftCard = document.getElementById('giftCard');
+
+            // Function to handle opening the card
+            const openGiftCard = () => {
+                giftCard.classList.add('open');
+                // Optional: Play a sound effect when opened
+                // const audio = new Audio('path/to/your/sound.mp3');
+                // audio.play();
+            };
+
+            // Add event listener for tap/click
+            giftCard.addEventListener('click', openGiftCard);
+
+            // For accessibility, allow opening with Enter key if focused
+            giftCard.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.keyCode === 13) {
+                    openGiftCard();
+                }
+            });
+
+            // Set initial focus for accessibility
+            giftCard.tabIndex = 0;
+        });
+    </script>
+</body>
+</html>
 
